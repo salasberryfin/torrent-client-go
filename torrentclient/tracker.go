@@ -23,17 +23,12 @@ type HttpTracker struct {
     Compact      int
 }
 
-type TrackerResponse struct {
-    Body         *http.Response
-}
-
 type Network struct {
     Listener    net.Listener
     Port        int
 }
 
 func computeHashes(torrent Torrent) []byte {
-    // Hash bencoded Info
     info := torrent.Data.BencodedInfo
     log.Print("Computing SHA1 hash for ", torrent.Data.Info.Name)
     hasher := sha1.New()
@@ -55,7 +50,6 @@ func generateRandomPeerId() []byte {
     peerIdHash := hasher.Sum(nil)
 
     return peerIdHash
-
 }
 
 func generateTracker (torrent Torrent, wg *sync.WaitGroup) (HttpTracker, error) {
@@ -71,10 +65,10 @@ func generateTracker (torrent Torrent, wg *sync.WaitGroup) (HttpTracker, error) 
     return HttpTracker {InfoHash: infoHash, PeerId: peerId, Port: listenPort, Uploaded: 0, Downloaded: 0, Left: 0, Compact: 1}, nil
 }
 
-func TrackerRequest (torrent Torrent, wg *sync.WaitGroup) (TrackerResponse, error) {
+func TrackerRequest (torrent Torrent, wg *sync.WaitGroup) (*http.Response, error) {
     tracker, errTracker := generateTracker(torrent, wg)
     if errTracker != nil {
-        return TrackerResponse {}, errTracker
+        return nil, errTracker
     }
     queryParams := url.Values {}
     queryParams.Set("info_hash", string(tracker.InfoHash))
@@ -89,15 +83,13 @@ func TrackerRequest (torrent Torrent, wg *sync.WaitGroup) (TrackerResponse, erro
     // Send HTTP Tracker request
     announce, errUrl := url.Parse(torrent.Data.Announce)
     if errUrl != nil {
-        return TrackerResponse {}, errUrl
+        return nil, errUrl
     }
     announce.RawQuery = queryParams.Encode()
     trackerResponse, errReq := http.Get(announce.String())
     if errReq != nil {
-        return TrackerResponse {}, errReq
+        return nil, errReq
     }
-    log.Print(trackerResponse)
 
-    return TrackerResponse {Body: trackerResponse}, nil
-
+    return trackerResponse, nil
 }

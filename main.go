@@ -19,13 +19,17 @@ func main() {
         panic(err)
     }
 
-    torrent, err := torrentclient.Parse(wd, FILE_NAME)
+    torrent, err := torrentclient.ParseTorrentFile(wd, FILE_NAME)
     log.Print("Announce: ", torrent.Data.AnnounceList)
     trackerResponse, errTracker := torrentclient.TrackerRequest(torrent, &wg)
     if errTracker != nil {
         log.Fatal("Error when generating HTTP Tracker request: ", errTracker)
     }
-    log.Print(trackerResponse)
+    resp, errResp := torrentclient.ParseTrackerResponse(trackerResponse)
+    if errResp != nil {
+        log.Fatal("Failed to parse HTTP Tracker response: ", errResp)
+    }
+    log.Print("Tracker response: ", resp)
 
     //wg.Wait()
 }
