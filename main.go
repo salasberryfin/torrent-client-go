@@ -3,15 +3,17 @@ package main
 import (
     "os"
     "log"
+    "sync"
 
     "github.com/salasberryfin/go-torrent-client/torrentclient"
 )
 
-const FILE_NAME = "cosmos-laundromat.torrent"
-//const FILE_NAME = "ubuntu.torrent"
-//const FILE_NAME = "big-buck-bunny.torrent"
+const FILE_NAME = "Ubuntu_519_archive.torrent"
 
 func main() {
+    // wait for goroutines to finish
+    var wg sync.WaitGroup
+    wg.Add(1)
     wd, err := os.Getwd()
     if err != nil {
         panic(err)
@@ -19,12 +21,13 @@ func main() {
 
     torrent, err := torrentclient.Parse(wd, FILE_NAME)
     log.Print("Announce: ", torrent.Data.AnnounceList)
-    httpTracker, errTracker := torrentclient.GenerateTracker(torrent)
+    trackerResponse, errTracker := torrentclient.TrackerRequest(torrent, &wg)
     if errTracker != nil {
-        log.Print("Error when generating HTTP Tracker: ", errTracker)
+        log.Fatal("Error when generating HTTP Tracker request: ", errTracker)
     }
-    log.Print(httpTracker)
-    //torrent.Hash = infoHash
+    log.Print(trackerResponse)
+
+    //wg.Wait()
 }
 
 

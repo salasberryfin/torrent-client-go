@@ -10,10 +10,19 @@ import (
 
 func (torrentNetwork* Network) listenOnPort (wg *sync.WaitGroup) {
     defer wg.Done()
-    log.Print("Reached listenOnPort")
+
+    log.Print("Starting server on port: ", torrentNetwork.Port)
+    for {
+        conn, err := torrentNetwork.Listener.Accept()
+        if err != nil {
+            log.Print("Server creation failed: " + err.Error())
+        }
+        addr, err := net.ResolveTCPAddr(conn.RemoteAddr().Network(), conn.RemoteAddr().String())
+        log.Print("bind to addr: ", addr)
+    }
 }
 
-func (torrentNetwork* Network) createListener () (int, error) {
+func (torrentNetwork* Network) createListener (wg *sync.WaitGroup) (int, error) {
     var err error
     var ln net.Listener
 
@@ -33,10 +42,7 @@ func (torrentNetwork* Network) createListener () (int, error) {
     }
 
     // run as a goroutine
-    var wg sync.WaitGroup
-    wg.Add(1)
-    go torrentNetwork.listenOnPort(&wg)
-    wg.Wait()
+    go torrentNetwork.listenOnPort(wg)
 
     return torrentNetwork.Port, nil
 }

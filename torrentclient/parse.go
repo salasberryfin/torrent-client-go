@@ -39,7 +39,7 @@ func Parse(dirPath string, fileName string) (Torrent, error) {
     }
 
     d := MetaInfo{}
-	errorBencode := bencode.Unmarshal(data, &d)
+    errorBencode := bencode.Unmarshal(data, &d)
     if errorBencode != nil {
         return Torrent{}, errors.New("Uncoding bencode failed: " + errorBencode.Error())
     }
