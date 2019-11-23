@@ -31,7 +31,7 @@ type Torrent struct {
 }
 
 func Parse(dirPath string, fileName string) (Torrent, error) {
-	torrentFilePath := path.Join(dirPath, fileName)
+    torrentFilePath := path.Join(dirPath, fileName)
     log.Print("Opening torrent file: ", torrentFilePath)
     data, err := os.Open(torrentFilePath)
     if err != nil {

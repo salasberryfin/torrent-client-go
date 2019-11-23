@@ -4,11 +4,11 @@ import (
     "log"
     "crypto/sha1"
     "math/rand"
-	"net"
-	"net/url"
-	"net/http"
-	"strconv"
-	"sync"
+    "net"
+    "net/url"
+    "net/http"
+    "strconv"
+    "sync"
 )
 
 const PEER_ID_BYTES = 20
@@ -44,11 +44,11 @@ func computeHashes(torrent Torrent) []byte {
 }
 
 func generateRandomPeerId() []byte {
-	var characterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-	b := make([]rune, PEER_ID_BYTES)
-	for i := range b {
-		b[i] = characterRunes[rand.Intn(len(characterRunes))]
-	}
+    var characterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+    b := make([]rune, PEER_ID_BYTES)
+    for i := range b {
+        b[i] = characterRunes[rand.Intn(len(characterRunes))]
+    }
     randString := string(b)
     hasher := sha1.New()
     hasher.Write([]byte(randString))
@@ -76,14 +76,14 @@ func TrackerRequest (torrent Torrent, wg *sync.WaitGroup) (TrackerResponse, erro
     if errTracker != nil {
         return TrackerResponse {}, errTracker
     }
-	queryParams := url.Values {}
-	queryParams.Set("info_hash", string(tracker.InfoHash))
-	queryParams.Set("peer_id", string(tracker.PeerId))
-	queryParams.Set("port", strconv.Itoa(tracker.Port))
-	queryParams.Set("uploaded", strconv.FormatInt(0, 10))
-	queryParams.Set("downloaded", strconv.FormatInt(0, 10))
-	queryParams.Set("left", strconv.FormatInt(int64(torrent.Data.Info.PieceLength), 10))
-	queryParams.Set("compact", strconv.Itoa(1))
+    queryParams := url.Values {}
+    queryParams.Set("info_hash", string(tracker.InfoHash))
+    queryParams.Set("peer_id", string(tracker.PeerId))
+    queryParams.Set("port", strconv.Itoa(tracker.Port))
+    queryParams.Set("uploaded", strconv.FormatInt(0, 10))
+    queryParams.Set("downloaded", strconv.FormatInt(0, 10))
+    queryParams.Set("left", strconv.FormatInt(int64(torrent.Data.Info.PieceLength), 10))
+    queryParams.Set("compact", strconv.Itoa(1))
     queryParams.Set("event", "started")
 
     // Send HTTP Tracker request
