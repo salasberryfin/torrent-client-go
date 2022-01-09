@@ -1,5 +1,5 @@
 ## Go Torrent client
-Simple BitTorrent client based on Go
+Simple BitTorrent client written in Go
 
 
 ### References
