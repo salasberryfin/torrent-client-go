@@ -19,15 +19,11 @@ func ParseTorrentFile(dirPath string, fileName string) (Torrent, error) {
 		return Torrent{}, errors.New("Reading .torrent file failed: " + err.Error())
 	}
 
+	// consider single-file only for now
 	d := MetaInfo{}
 	err = bencode.Unmarshal(data, &d)
 	if err != nil {
 		return Torrent{}, errors.New("Uncoding bencode failed: " + err.Error())
-	}
-
-	multiFileTorrent := d.Info.IsMultiFile()
-	if multiFileTorrent {
-		log.Println("Multi file torrent detected")
 	}
 
 	bencodedInfo := bytes.Buffer{}
@@ -37,5 +33,12 @@ func ParseTorrentFile(dirPath string, fileName string) (Torrent, error) {
 	}
 	d.BencodedInfo = bencodedInfo
 
-	return Torrent{Path: torrentFilePath, Data: d}, nil
+	t := Torrent{Path: torrentFilePath, Data: d}
+	httpTracker, err := NewTracker(t)
+	if err != nil {
+		return Torrent{}, errors.New("Failed to create Tracker instance: " + err.Error())
+	}
+	t.Tracker = *httpTracker
+
+	return t, nil
 }

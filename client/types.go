@@ -4,37 +4,42 @@ import "bytes"
 
 // Torrent represent all information required by the protocol
 type Torrent struct {
-	Path string
-	Data MetaInfo
-	Hash []byte
-}
-
-// IsMultiFile checks if the decoded data corresponds to a multi-file torrent
-func (i InfoDictEnvelope) IsMultiFile() (multi bool) {
-	return i.Files.Length != 0
+	Path    string
+	Data    MetaInfo
+	Hash    []byte
+	Tracker HTTPTracker
 }
 
 // MetaInfo is the struct where parsed bencoded .torrent data will be stored
 type MetaInfo struct {
-	Info         InfoDictEnvelope `bencode:"info"`
-	Announce     string           `bencode:"announce"`
-	AnnounceList [][]string       `bencode:"announce-list"`
-	CreationDate int              `bencode:"creation date"`
-	Comment      string           `bencode:"comment"`
-	CreatedBy    string           `bencode:"created by"`
-	Encoding     string           `bencode:"encoding"`
+	//Info         InfoDictEnvelope `bencode:"info"`
+	Info         TorrentInfo `bencode:"info"`
+	Announce     string      `bencode:"announce"`
+	AnnounceList [][]string  `bencode:"announce-list"`
+	CreationDate int         `bencode:"creation date"`
+	Comment      string      `bencode:"comment"`
+	CreatedBy    string      `bencode:"created by"`
+	Encoding     string      `bencode:"encoding"`
 	BencodedInfo bytes.Buffer
 }
 
-// InfoDictEnvelope is the basic Info struct for both single and multi-file
-type InfoDictEnvelope struct {
-	Name        string    `bencode:"name"`
-	Length      int       `bencode:"length,omitempty"`
-	Md5Sum      string    `bencode:"md5sum,omitempty"`
-	Files       FilesDict `bencode:"files,omitempty"`
-	PieceLength int       `bencode:"piece length"`
-	Pieces      string    `bencode:"pieces"`
-	Private     int       `bencode:"private"`
+// TorrentInfo is the info dictionary for single file torrents
+type TorrentInfo struct {
+	Name        string `bencode:"name"`
+	Length      int    `bencode:"length"`
+	PieceLength int    `bencode:"piece length"`
+	Pieces      string `bencode:"pieces"`
+}
+
+// HTTPTracker
+type HTTPTracker struct {
+	InfoHash   []byte
+	PeerId     []byte
+	Port       int
+	Uploaded   int
+	Downloaded int
+	Left       int
+	Compact    int
 }
 
 // FilesDict is only present when multi-file

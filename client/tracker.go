@@ -2,24 +2,17 @@ package client
 
 import (
 	"crypto/sha1"
+	"fmt"
 	"log"
 	"math/rand"
-	"sync"
+	"net/http"
+	"net/url"
+	"strconv"
 
-	"github.com/salasberryfin/torrent-client-go/network"
+	bencode "github.com/jackpal/bencode-go"
 )
 
 const PEER_ID_BYTES = 20
-
-type HTTPTracker struct {
-	InfoHash   []byte
-	PeerId     []byte
-	Port       int
-	Uploaded   int
-	Downloaded int
-	Left       int
-	Compact    int
-}
 
 func (t *Torrent) computeHash() []byte {
 	info := t.Data.BencodedInfo
@@ -46,12 +39,13 @@ func generateRandomPeerID() []byte {
 }
 
 // NewTracker creates a new instance of HTTPTracker
-func NewTracker(torrent Torrent, wg *sync.WaitGroup) (t *HTTPTracker, err error) {
-	net, err := network.New(wg)
+func NewTracker(torrent Torrent) (t *HTTPTracker, err error) {
+	//net, err := network.New(wg)
 	t = &HTTPTracker{
-		InfoHash:   torrent.computeHash(),
-		PeerId:     generateRandomPeerID(),
-		Port:       net.Port,
+		InfoHash: torrent.computeHash(),
+		PeerId:   generateRandomPeerID(),
+		//Port:       net.Port,
+		Port:       6881,
 		Uploaded:   0,
 		Downloaded: 0,
 		Left:       0,
@@ -61,19 +55,50 @@ func NewTracker(torrent Torrent, wg *sync.WaitGroup) (t *HTTPTracker, err error)
 	return
 }
 
-// func generateTracker(torrent Torrent, wg *sync.WaitGroup) (HttpTracker, error) {
-// 	// infoHash := computeHashes(torrent)
-// 	log.Print("Generating HTTP tracker...")
-// 	peerId := generateRandomPeerID()
-// 	var torrentNetwork Network
-// 	listenPort, errListen := torrentNetwork.createListener(wg)
-// 	if errListen != nil {
-// 		return HttpTracker{}, errListen
-// 	}
-//
-// 	return HttpTracker{InfoHash: infoHash, PeerId: peerId, Port: listenPort, Uploaded: 0, Downloaded: 0, Left: 0, Compact: 1}, nil
-// }
-//
+func (t *HTTPTracker) ParseResponse(r *http.Response) {
+	d := TrackerResponse{}
+
+	if r.StatusCode != 200 {
+		log.Fatal("Something went wrong when sending tracker request, error:", r.StatusCode)
+	}
+
+	err := bencode.Unmarshal(r.Body, &d)
+	if err != nil {
+		log.Fatal("Something went wrong when parsing tracker response:", err)
+	}
+
+	fmt.Println("Tracker response: ", d)
+}
+
+// TrackerRequest generates a Tracker HTTP request for the given Torrent
+func (t *Torrent) TrackerRequest() {
+	tracker := t.Tracker
+	params := url.Values{}
+	params.Set("info_hash", string(tracker.InfoHash))
+	params.Set("peer_id", string(tracker.PeerId))
+	params.Set("port", strconv.Itoa(tracker.Port))
+	params.Set("uploaded", strconv.Itoa(tracker.Uploaded))
+	params.Set("downloaded", strconv.Itoa(tracker.Downloaded))
+	params.Set("left", strconv.Itoa(tracker.Downloaded))
+	params.Set("compact", strconv.Itoa(1))
+	params.Set("event", "started")
+
+	client := http.Client{}
+	req, err := http.NewRequest("GET", t.Data.Announce, nil)
+	if err != nil {
+		log.Fatal("Failed when building HTTP request: ", err)
+	}
+	req.URL.RawQuery = params.Encode()
+	log.Println("Request URL: ", req.URL.String())
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal("Failed when sending tracker HTTP request: ", err)
+	}
+
+	tracker.ParseResponse(resp)
+}
+
 // // TrackerRequest
 // func TrackerRequest(torrent Torrent, wg *sync.WaitGroup) (*http.Response, error) {
 // 	tracker, errTracker := generateTracker(torrent, wg)
