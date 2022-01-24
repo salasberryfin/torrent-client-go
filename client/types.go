@@ -62,8 +62,8 @@ type TrackerResponse struct {
 	//Peers PeersDict `bencode:"peers"`
 }
 
-// type PeersDict struct {
-// 	PeerID string `bencode:"peer id"`
-// 	IP     string `bencode:"ip"`
-// 	Port   int    `bencode:"port"`
-// }
+type PeersDict struct {
+	PeerID string `bencode:"peer id"`
+	IP     string `bencode:"ip"`
+	Port   int    `bencode:"port"`
+}
