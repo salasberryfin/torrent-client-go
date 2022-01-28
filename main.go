@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
 	"github.com/salasberryfin/torrent-client-go/client"
+	"github.com/salasberryfin/torrent-client-go/network"
 	"github.com/salasberryfin/torrent-client-go/utils"
 )
 
@@ -23,5 +25,8 @@ func main() {
 	if err != nil {
 		log.Fatal("Error generating HTTP tracker: ", err)
 	}
-	tracker.Request(torrent.Data.Announce)
+	resp := tracker.Request(torrent.Data.Announce)
+	peers := resp.GetPeers()
+	fmt.Println("Response from tracker:", peers[0])
+	network.InitHandshake(tracker.InfoHash, tracker.PeerID)
 }

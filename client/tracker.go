@@ -12,7 +12,7 @@ import (
 	bencode "github.com/jackpal/bencode-go"
 )
 
-const PEER_ID_BYTES = 20
+const peerIDBytes = 20
 
 func (t *Torrent) computeHash() []byte {
 	info := t.Data.BencodedInfo
@@ -26,7 +26,7 @@ func (t *Torrent) computeHash() []byte {
 
 func generateRandomPeerID() []byte {
 	var characterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-	b := make([]rune, PEER_ID_BYTES)
+	b := make([]rune, peerIDBytes)
 	for i := range b {
 		b[i] = characterRunes[rand.Intn(len(characterRunes))]
 	}
@@ -42,7 +42,7 @@ func generateRandomPeerID() []byte {
 func (t *Torrent) NewHTTPTracker() (track *HTTPTracker, err error) {
 	track = &HTTPTracker{
 		InfoHash: t.computeHash(),
-		PeerId:   generateRandomPeerID(),
+		PeerID:   generateRandomPeerID(),
 		//Port:       net.Port,
 		Port:       6881,
 		Uploaded:   0,
@@ -72,7 +72,7 @@ func (t *HTTPTracker) Parse(r *http.Response) (d TrackerResponse) {
 func (t *HTTPTracker) Request(announce string) (d TrackerResponse) {
 	params := url.Values{}
 	params.Set("info_hash", string(t.InfoHash))
-	params.Set("peer_id", string(t.PeerId))
+	params.Set("peer_id", string(t.PeerID))
 	params.Set("port", strconv.Itoa(t.Port))
 	params.Set("uploaded", strconv.Itoa(t.Uploaded))
 	params.Set("downloaded", strconv.Itoa(t.Downloaded))
@@ -96,18 +96,29 @@ func (t *HTTPTracker) Request(announce string) (d TrackerResponse) {
 
 	d = t.Parse(resp)
 
-	numPeers := len(d.Peers) / 6
+	if d.FailureReason != "" {
+		log.Fatal("Tracker response reports error:", d.FailureReason)
+	}
+
+	return
+}
+
+// GetPeers gets the parsed TrackerResponse and extracts the peers
+func (r *TrackerResponse) GetPeers() (ips []PeersInfo) {
+	numPeers := len(r.Peers) / 6
 	for x := 0; x < numPeers; x++ {
-		ipBytes := d.Peers[x*6 : (x*6)+6]
+		ipBytes := r.Peers[x*6 : (x*6)+6]
 		ip := net.IPv4(ipBytes[0], ipBytes[1], ipBytes[2], ipBytes[3])
 		port, err := strconv.Atoi(strconv.Itoa(int(ipBytes[4])) + strconv.Itoa(int(ipBytes[5])))
 		if err != nil {
 			return
 		}
-		log.Printf("Peer %d addr: %s:%d", x+1, ip, port)
-	}
 
-	log.Print("Tracker interval:", d.Interval)
+		ips = append(ips, PeersInfo{
+			IP:   ip,
+			Port: port},
+		)
+	}
 
 	return
 }

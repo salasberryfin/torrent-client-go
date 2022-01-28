@@ -1,6 +1,9 @@
 package client
 
-import "bytes"
+import (
+	"bytes"
+	"net"
+)
 
 // Torrent represent all information required by the protocol
 type Torrent struct {
@@ -12,7 +15,6 @@ type Torrent struct {
 
 // MetaInfo is the struct where parsed bencoded .torrent data will be stored
 type MetaInfo struct {
-	//Info         InfoDictEnvelope `bencode:"info"`
 	Info         TorrentInfo `bencode:"info"`
 	Announce     string      `bencode:"announce"`
 	AnnounceList [][]string  `bencode:"announce-list"`
@@ -31,10 +33,10 @@ type TorrentInfo struct {
 	Pieces      string `bencode:"pieces"`
 }
 
-// HTTPTracker
+// HTTPTracker is the information contained in a HTTP Tracker request
 type HTTPTracker struct {
 	InfoHash   []byte
-	PeerId     []byte
+	PeerID     []byte
 	Port       int
 	Uploaded   int
 	Downloaded int
@@ -59,11 +61,10 @@ type TrackerResponse struct {
 	Complete       int    `bencode:"complete"`
 	Incomplete     int    `bencode:"incomplete"`
 	Peers          string `bencode:"peers"`
-	//Peers PeersDict `bencode:"peers"`
 }
 
-type PeersDict struct {
-	PeerID string `bencode:"peer id"`
-	IP     string `bencode:"ip"`
-	Port   int    `bencode:"port"`
+// PeersInfo describes a peer announced by the tracker
+type PeersInfo struct {
+	IP   net.IP
+	Port int
 }
