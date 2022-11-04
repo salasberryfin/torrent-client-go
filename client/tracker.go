@@ -38,7 +38,7 @@ func generateRandomPeerID() []byte {
 	return peerIDHash
 }
 
-// NewHTTPTracker created a new tracker for the Torrent specification
+// NewHTTPTracker creates a new tracker for the Torrent specification
 func (t *Torrent) NewHTTPTracker() (track *HTTPTracker, err error) {
 	track = &HTTPTracker{
 		InfoHash: t.computeHash(),
