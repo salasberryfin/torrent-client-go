@@ -1,23 +1,16 @@
-package network
+package handshake
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/salasberryfin/torrent-client-go/network"
+	"github.com/salasberryfin/torrent-client-go/torrent"
+)
 
 var (
 	pstr     = "BitTorrent protocol"
 	reserved = make([]byte, 8)
 )
-
-// Connect establishes a TCP connection with a peer
-//func Connect(peerIP, peerPort string, msg []byte) {
-//	conn, err := net.Dial(
-//		"tcp",
-//		fmt.Sprintf("%i:%i", peerIP, peerPort),
-//	)
-//	if err != nil {
-//		log.Fatal("Error establishing TCP connection: ", err)
-//	}
-//	fmt.Println("Conn: ", conn)
-//}
 
 // formatMessage formats the content of the handshake
 func (h Handshake) formatMessage() (msg []byte) {
@@ -30,20 +23,25 @@ func (h Handshake) formatMessage() (msg []byte) {
 	index += copy(msg[index:], pstr)
 	index += copy(msg[index:], h.Reserved[:])
 	index += copy(msg[index:], h.InfoHash[:])
-	copy(msg[index:], h.PeerID[:])
+	index += copy(msg[index:], h.PeerID[:])
 
 	return
 }
 
 // NewConnection establishes a TCP connection to a peer: sends handshake and
 // validates response
-func NewConnection(infoHash, peerID []byte) {
+func NewConnection(infoHash, peerID []byte, peer torrent.Peer) {
 	handshake := Handshake{
 		InfoHash: infoHash,
 		PeerID:   peerID,
+		Peer:     peer,
 		Pstr:     pstr,
 		Reserved: reserved,
 	}
 	msg := handshake.formatMessage()
-	fmt.Println("Formatted handshake:", msg)
+	fmt.Println("Formatted handshake:", string(msg[:]))
+	network.Peer{
+		IP:   peer.IP,
+		Port: peer.Port,
+	}.Connect(msg)
 }

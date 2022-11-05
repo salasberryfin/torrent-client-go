@@ -33,6 +33,13 @@ type PiecePayload struct {
 	Block string
 }
 
+// Peer contains the information that defines a Peer in the network
+type Peer struct {
+	ID   []byte
+	IP   net.IP
+	Port int
+}
+
 // Handshake contains the information used for the initial TCP connection
 type Handshake struct {
 	Pstr     string

@@ -1,4 +1,4 @@
-package client
+package torrent
 
 import (
 	"crypto/sha1"
@@ -39,8 +39,8 @@ func generateRandomPeerID() []byte {
 }
 
 // NewHTTPTracker creates a new tracker for the Torrent specification
-func (t *Torrent) NewHTTPTracker() (track *HTTPTracker, err error) {
-	track = &HTTPTracker{
+func (t *Torrent) NewHTTPTracker() (track HTTPTracker, err error) {
+	track = HTTPTracker{
 		InfoHash: t.computeHash(),
 		PeerID:   generateRandomPeerID(),
 		//Port:       net.Port,
@@ -103,18 +103,18 @@ func (t *HTTPTracker) Request(announce string) (d TrackerResponse) {
 	return
 }
 
-// GetPeers gets the parsed TrackerResponse and extracts the peers
-func (r *TrackerResponse) GetPeers() (ips []PeersInfo) {
-	numPeers := len(r.Peers) / 6
+// GetPeers extracts the peer info from tracker response
+func GetPeers(peers string) (ips []Peer) {
+	numPeers := len(peers) / 6
 	for x := 0; x < numPeers; x++ {
-		ipBytes := r.Peers[x*6 : (x*6)+6]
+		ipBytes := peers[x*6 : (x*6)+6]
 		ip := net.IPv4(ipBytes[0], ipBytes[1], ipBytes[2], ipBytes[3])
 		port, err := strconv.Atoi(strconv.Itoa(int(ipBytes[4])) + strconv.Itoa(int(ipBytes[5])))
 		if err != nil {
 			return
 		}
 
-		ips = append(ips, PeersInfo{
+		ips = append(ips, Peer{
 			IP:   ip,
 			Port: port},
 		)
