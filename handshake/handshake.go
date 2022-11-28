@@ -16,6 +16,10 @@ var (
 func (h Handshake) formatMessage() (msg []byte) {
 	// It is (49+len(pstr)) bytes long
 	// <pstrlen><pstr><reserved><info_hash><peer_id>
+	fmt.Println("Handshake request:")
+	fmt.Println("\tInfoHash: ", h.InfoHash)
+	fmt.Println("\tPeerID: ", h.PeerID)
+
 	pstrlen := len(h.Pstr)
 	msg = make([]byte, pstrlen+49)
 	msg[0] = byte(pstrlen)
@@ -39,7 +43,6 @@ func NewConnection(infoHash, peerID []byte, peer torrent.Peer) {
 		Reserved: reserved,
 	}
 	msg := handshake.formatMessage()
-	fmt.Println("Formatted handshake:", string(msg[:]))
 	network.Peer{
 		IP:   peer.IP,
 		Port: peer.Port,

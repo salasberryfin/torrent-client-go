@@ -52,7 +52,7 @@ func (cli *Client) trackerRequest() {
 }
 
 // Connect establishes a TCP connection with a peer through handshake
-func (cli Client) Connect() {
+func (cli *Client) Connect() {
 	handshake.NewConnection(
 		cli.Torrent.Hash,
 		cli.Tracker.PeerID,

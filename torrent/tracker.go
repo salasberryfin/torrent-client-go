@@ -2,6 +2,7 @@ package torrent
 
 import (
 	"crypto/sha1"
+	"encoding/binary"
 	"log"
 	"math/rand"
 	"net"
@@ -105,18 +106,16 @@ func (t *HTTPTracker) Request(announce string) (d TrackerResponse) {
 
 // GetPeers extracts the peer info from tracker response
 func GetPeers(peers string) (ips []Peer) {
+	bytePeers := []byte(peers)
 	numPeers := len(peers) / 6
 	for x := 0; x < numPeers; x++ {
-		ipBytes := peers[x*6 : (x*6)+6]
+		ipBytes := bytePeers[x*6 : (x*6)+6]
 		ip := net.IPv4(ipBytes[0], ipBytes[1], ipBytes[2], ipBytes[3])
-		port, err := strconv.Atoi(strconv.Itoa(int(ipBytes[4])) + strconv.Itoa(int(ipBytes[5])))
-		if err != nil {
-			return
-		}
+		port := binary.BigEndian.Uint16(ipBytes[4:6])
 
 		ips = append(ips, Peer{
 			IP:   ip,
-			Port: port},
+			Port: int(port)},
 		)
 	}
 
