@@ -10,3 +10,7 @@ type Handshake struct {
 	PeerID   []byte
 	Peer     torrent.Peer
 }
+
+// Bitfield is the message sent inmediately after the Handshake and before any
+// other message is sent
+type Bitfield []byte
