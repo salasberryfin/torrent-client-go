@@ -13,3 +13,22 @@ type ConnectionDetails struct {
 	Choked     bool
 	Interested bool
 }
+
+// Payload is the interface that implements the formatMessage function for different message types
+type Payload interface {
+	formatMessage()
+}
+
+// RequestPayload is the payload of the message used to request a block
+type RequestPayload struct {
+	Index  int
+	Begin  int
+	Length int
+}
+
+// PiecePayload is the payload of the message that contains blocks of data
+type PiecePayload struct {
+	Index int
+	Begin int
+	Block string
+}
